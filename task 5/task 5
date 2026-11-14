@@ -1,0 +1,36 @@
+import csv
+from datetime import datetime, timedelta
+
+
+def generate_csv(path, station_count):
+
+    start = datetime(2026, 1, 1)
+
+    with open(path, "w", newline="", encoding="utf-8") as f:
+
+        w = csv.writer(f)
+
+        w.writerow(["station", "date", "pm25"])
+
+        for i in range(station_count):
+
+            station = f"Station_{i+1:03d}"
+
+            for hour_no in range(8760):
+
+                dt = start + timedelta(hours=hour_no)
+
+                value = 20 + (i % 10) + (hour_no % 24) * 0.5
+
+                w.writerow([
+                    station,
+                    dt.date().isoformat(),
+                    value
+                ])
+
+
+for n in (1, 12, 120):
+
+    generate_csv(f"readings_{n}.csv", n)
+
+print("Datasets generated successfully.")
