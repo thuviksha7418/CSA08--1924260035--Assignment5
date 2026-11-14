@@ -1,0 +1,69 @@
+import re
+from collections import Counter
+
+STOP = {
+    "the", "a", "an", "is", "are",
+    "was", "were", "and", "or",
+    "to", "of", "in", "on"
+}
+
+
+def summarise(text, k=2):
+
+    sentences = re.split(
+        r'(?<=[.!?])\s+',
+        text.strip()
+    )
+
+    tokens = []
+    all_tokens = []
+
+    for sentence in sentences:
+
+        words = re.findall(
+            r"[a-zA-Z]+",
+            sentence.lower()
+        )
+
+        useful = [
+            w for w in words
+            if w not in STOP
+        ]
+
+        tokens.append(useful)
+        all_tokens.extend(useful)
+
+    freq = Counter(all_tokens)
+
+    ranked = []
+
+    for i, (sentence, words) in enumerate(
+        zip(sentences, tokens)
+    ):
+
+        ranked.append((
+            sum(freq[w] for w in words),
+            i,
+            sentence
+        ))
+
+    chosen = sorted(
+        ranked,
+        key=lambda x: (-x[0], x[1])
+    )[:k]
+
+    return " ".join(
+        x[2]
+        for x in sorted(chosen, key=lambda x: x[1])
+    )
+
+
+text = """
+Air pollution is increasing in the city.
+Several monitoring stations recorded high PM2.5 levels.
+Citizens reported smoke and unpleasant smells.
+The authorities should improve pollution monitoring.
+"""
+
+print("Summary:")
+print(summarise(text))
