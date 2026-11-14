@@ -1,0 +1,70 @@
+import sqlite3
+import time
+
+con = sqlite3.connect(":memory:")
+
+con.execute("""
+CREATE TABLE aq (
+    station TEXT,
+    day TEXT,
+    pm25 REAL
+)
+""")
+
+readings = [
+    ("Adyar", "2026-10-01", 48.0),
+    ("Guindy", "2026-10-01", 95.0),
+    ("Guindy", "2026-10-03", 121.0),
+    ("Adyar", "2026-10-04", 60.0)
+]
+
+con.executemany(
+    "INSERT INTO aq VALUES (?, ?, ?)",
+    readings
+)
+
+con.commit()
+
+con.execute("""
+CREATE INDEX idx_aq_station_day
+ON aq(station, day)
+""")
+
+con.commit()
+
+
+def measure_query(
+    connection,
+    sql,
+    params,
+    repetitions=1000
+):
+
+    start = time.perf_counter()
+
+    for _ in range(repetitions):
+
+        connection.execute(
+            sql,
+            params
+        ).fetchone()
+
+    return time.perf_counter() - start
+
+
+sql = """
+SELECT AVG(pm25)
+FROM aq
+WHERE station = ?
+AND day = ?
+"""
+
+elapsed = measure_query(
+    con,
+    sql,
+    ("Adyar", "2026-10-01")
+)
+
+print("Indexed Query Time:", elapsed)
+
+con.close()
